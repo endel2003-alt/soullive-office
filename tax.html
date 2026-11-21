@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쏘울라이브 세무·회계 대시보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+/* SOULLIVE Office와 같은 톤 (Pretendard · 보라 #8636F9 · 흰 카드 + 옅은 그림자) */
+:root{
+  color-scheme: light;
+  --bg:#F6F5FA; --surface:#FFFFFF; --surface-2:#F4F2FA; --line:#E7E5EF; --line-soft:#F0EEF6;
+  --ink:#1D1B26; --ink-2:#5B5868; --ink-3:#9592A3;
+  --accent:#8636F9; --accent-ink:#6A1FD6; --accent-soft:#F1E9FF;
+  --s1:#8636F9; --s2:#F2994A;
+  --warn:#C27A06; --warn-bg:#FDF2DC; --bad:#D23B4A; --bad-bg:#FCE8EA; --good:#14915F; --good-bg:#E3F6EE;
+  --radius:12px; --shadow:0 1px 2px rgba(20,16,40,.04),0 4px 16px rgba(20,16,40,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+.num,td.n,th.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.mono{font-variant-numeric:tabular-nums;font-size:12.5px;letter-spacing:.01em}
+button,select,input,textarea{font:inherit;color:inherit}
+
+/* 레이아웃: 위쪽 탭 바 (Office 안에 들어가 있으므로 왼쪽 메뉴 대신) */
+.app{display:block;min-height:100vh}
+nav.side{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 4px 10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.brand{display:none}
+.navsep,.side .foot{display:none}
+.navbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;border-radius:9px;padding:7px 13px;cursor:pointer;color:var(--ink-2);font-weight:600;font-size:13px;white-space:nowrap}
+.navbtn:hover{background:#fff;color:var(--ink)}
+.navbtn.on{background:#fff;color:var(--accent-ink);box-shadow:0 1px 3px rgba(23,20,42,.12)}
+.badge{font-size:11px;background:var(--accent-soft);color:var(--accent-ink);border-radius:99px;padding:0 7px;font-weight:700}
+main{padding:20px 4px 60px;min-width:0}
+body.standalone .app{max-width:1280px;margin:0 auto;padding:0 24px}
+.topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.topbar h1{font-size:22px;margin:0 auto 0 0;letter-spacing:-.02em;font-weight:800}
+
+/* 버튼·입력 */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;cursor:pointer;white-space:nowrap;font-weight:600;font-size:13px;color:var(--ink)}
+.btn:hover{border-color:#CFCBDD;background:#FCFBFE}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent-ink)}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:7px}
+.btn.ghost{border-color:transparent;background:none}
+body.nodl [data-hide-nodl]{display:none}
+select,input[type=text],input[type=number],input[type=date],textarea{background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 10px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* 카드·타일 */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card h2{font-size:15px;margin:0 0 14px;font-weight:700}
+.card h2 .sub{font-weight:400;color:var(--ink-3);font-size:12px;margin-left:6px}
+.grid{display:grid;gap:14px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.tile .lbl{color:var(--ink-3);font-size:12px;font-weight:600}
+.tile .val{font-variant-numeric:tabular-nums;font-size:24px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+.tile .hint{color:var(--ink-3);font-size:12px;margin-top:2px}
+
+/* 표 */
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:middle}
+th{font-size:12px;color:var(--ink-3);font-weight:600;background:#FBFAFD;position:sticky;top:0;z-index:1;white-space:nowrap}
+tbody tr:hover{background:#FAF8FF}
+tfoot td{font-weight:700;border-top:1px solid var(--line);border-bottom:0;background:#FBFAFD}
+tr.off td{color:var(--ink-3)}
+.tablewrap{overflow:auto;max-height:64vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+.muted{color:var(--ink-3)}
+.small{font-size:12px}
+.pill{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:2px 8px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+
+/* 안내·알림 */
+.note{background:var(--surface-2);border-radius:10px;padding:11px 14px;color:var(--ink-2);font-size:12.5px;line-height:1.7}
+.note b{color:var(--ink)}
+.banner{border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.info{background:var(--accent-soft);color:var(--accent-ink)}
+.banner.bad{background:var(--bad-bg);color:var(--bad)}
+.alert{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 14px;border-radius:10px;background:var(--surface-2);margin-bottom:8px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--ink-2);margin-bottom:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chartbox svg{width:100%;height:auto;display:block}
+.chartbox text{font-family:inherit}
+.tip{position:absolute;pointer-events:none;background:#1D1B26;color:#fff;border-radius:9px;padding:8px 11px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .08s;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.modal-bg{position:fixed;inset:0;background:rgba(23,20,42,.45);display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px;z-index:50;overflow:auto}
+.modal{background:#fff;border-radius:16px;width:min(560px,100%);padding:22px 24px;border:0;box-shadow:0 20px 60px rgba(20,16,40,.25)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.right{margin-left:auto}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1D1B26;color:#fff;padding:11px 18px;border-radius:10px;z-index:60;max-width:92vw;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.empty{text-align:center;padding:40px 10px;color:var(--ink-2)}
+.empty h3{margin:0 0 6px;color:var(--ink)}
+.drop{border:1.5px dashed #D6D1E6;border-radius:12px;padding:24px;text-align:center;color:var(--ink-2);cursor:pointer;display:block;background:#FCFBFE}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.srcrow{display:grid;grid-template-columns:90px 1fr auto;gap:8px;align-items:center;margin-bottom:6px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.steps div{background:var(--surface-2);border-radius:10px;padding:12px 14px}
+.steps b{display:block;margin-bottom:2px}
+@media (max-width:900px){
+  nav.side{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:10px 2px}
+  nav.side::-webkit-scrollbar{display:none}
+  main{padding:14px 2px 40px}
+  .g4{grid-template-columns:repeat(2,1fr)}.g2,.steps{grid-template-columns:1fr}
+  .topbar h1{font-size:19px}
+}
+.split{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}.split32{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+.navsel{display:none}
+@media (max-width:700px){
+  nav.side{padding:10px 0;gap:0}
+  nav.side .navbtn{display:none}
+  .navsel{display:block;width:100%;font-weight:700;font-size:15px;padding:11px 40px 11px 14px;border:1px solid var(--line);border-radius:12px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2.4'%3E%3Cpath d='M4 6h16M4 12h16M4 18h16'/%3E%3C/svg%3E") no-repeat right 14px center;-webkit-appearance:none;appearance:none;color:var(--ink)}
+  .split,.split32,.grid[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{padding:14px 14px;border-radius:14px}
+  .card h2{font-size:14px}.card h2 .sub{display:block;margin:2px 0 0}
+  .alert{flex-wrap:wrap;gap:8px}.alert>span{flex:1 1 180px;min-width:0}
+  .legend{flex-wrap:wrap;row-gap:4px}.legend span{white-space:normal}
+  .topbar{gap:6px}.topbar h1{flex:1 0 100%;margin-bottom:2px}.topbar select,.topbar .btn{flex:1 1 auto;min-width:0}
+  .srcrow{grid-template-columns:1fr}
+  .card>table,.card table:not(.chart){display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .tile .v,.tile b{word-break:keep-all}
+}
+</style>
+</head>
+<body>
+<script>if (window.self === window.top) document.body.classList.add("standalone");</script>
+<div class="app"><nav class="side" id="nav"></nav><main id="main"></main></div>
+<div id="tip" class="tip"></div><div id="modal-root"></div><div id="toast-root"></div>
+
+<script>
+/* 세무·회계 화면 코드도 승인된 직원이 로그인한 상태에서만 내려받아요. */
+(async () => {
+  async function __loadBundle(sb, name, ver) {
+    try { const c = JSON.parse(localStorage.getItem('so_b_' + name) || 'null'); if (c && c.ver === ver) return c.code; } catch { }
+    const k = await sb.rpc('app_key', { p_name: name }); if (k.error || !k.data) throw new Error('볼 수 있는 권한이 없어요');
+    const raw = Uint8Array.from(atob(k.data), c => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+    const buf = new Uint8Array(await (await fetch(`app_${name}.bin?v=${ver}`, { cache: 'no-cache' })).arrayBuffer());
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    const code = await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    try { localStorage.setItem('so_b_' + name, JSON.stringify({ ver, code })); } catch { }
+    return code;
+  }
+  const sb = supabase.createClient('https://iaorjonuhayrosewcugi.supabase.co', 'sb_publishable_lP9lRTCypxtLQv8-xPap3A_HEoUy-is');
+  const fail = m => { document.body.insertAdjacentHTML('beforeend', `<div style="padding:40px;text-align:center;color:#666;font-family:sans-serif">${m}</div>`); };
+  try {
+    const { data: { session } } = await sb.auth.getSession(); if (!session) return fail('Office에 로그인한 뒤 열어 주세요.');
+    const code = await __loadBundle(sb, 'tax', 'b6581144c4e6');
+    const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s);
+  } catch (e) { console.error(e); fail('화면을 불러오지 못했어요. 새로고침해 주세요.'); }
+})();
+
+</script>
+</body>
+</html>

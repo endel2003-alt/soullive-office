@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SOULLIVE Office</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#17142A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SOULLIVE">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F6F5FA; --panel:#FFFFFF; --line:#E7E5EF; --line2:#F0EEF6;
+  --ink:#1D1B26; --ink2:#5B5868; --ink3:#9592A3;
+  --brand:#8636F9; --brand-soft:#F1E9FF; --brand-ink:#6A1FD6;
+  --ok:#14915F; --ok-soft:#E3F6EE; --warn:#C27A06; --warn-soft:#FDF2DC;
+  --bad:#D23B4A; --bad-soft:#FCE8EA; --info:#2D6FD6; --info-soft:#E6EFFD;
+  --r:12px; --shadow:0 1px 2px rgba(20,16,40,.04),0 4px 16px rgba(20,16,40,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overscroll-behavior-y:none}
+body{font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--brand)}
+.hidden{display:none!important}
+
+/* layout */
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh;min-height:100dvh}
+.side{background:#17142A;color:#CFCBE3;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;color:#fff;font-weight:800;letter-spacing:.02em;font-size:16px}
+.logo img{height:19px;width:auto;display:block}.logo small{font-size:11px;font-weight:600;letter-spacing:.14em;color:#B9A8FF;padding:3px 0 0}
+.authlogo{display:block;height:30px;width:auto;margin:0 0 26px}
+.nav{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;color:#CFCBE3;text-decoration:none;font-weight:500;border:0;background:none;width:100%;text-align:left}
+.nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav.on{background:rgba(139,108,255,.22);color:#fff}
+.nav .ic{width:18px;text-align:center;opacity:.9}
+.nav .cnt{margin-left:auto;background:#FF5C6C;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px}
+.side .sec{font-size:11px;color:#7C7896;padding:14px 12px 4px;letter-spacing:.06em}
+.side .me{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
+.side .me b{color:#fff;display:block}
+.side .me button{background:none;border:0;color:#9F9BB8;padding:0;margin-top:6px;cursor:pointer;font-size:12px}
+.main{padding:28px 36px 60px;min-width:0}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.head h1{font-size:22px;margin:0;font-weight:800;letter-spacing:-.01em}
+.head p{margin:4px 0 0;color:var(--ink2)}
+
+/* atoms */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:20px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:1fr 1fr}}
+.mtop,.mtab,.navdim,.sm-only{display:none}
+.taxframe{width:100%;height:calc(100vh - 56px);height:calc(100dvh - 56px);border:0;background:transparent;display:block;margin-top:-12px}
+.doccards{flex-direction:column;gap:10px}
+.aprwrap{display:grid;grid-template-columns:210px minmax(0,1fr);gap:16px;align-items:start}
+.aprside{padding:12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:20px}
+.aprside .boxsec{margin:10px 8px 4px;font-size:12px}.aprside .boxsec:first-child{margin-top:2px}
+.aprside a{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink2);font-size:14px}
+.aprside a:hover{background:#FAF9FD}.aprside a.on{background:var(--brand-soft);color:var(--brand-ink);font-weight:700}
+.aprside .cnt{background:#FF5C6C;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px}
+.boxbtn{border:0;background:none;font-size:22px;padding:0 10px 0 0;cursor:pointer;line-height:1;vertical-align:-2px}
+.docmeta{display:flex;align-items:center;gap:12px;margin:4px 0 16px}
+.docmeta .av{width:44px;height:44px;font-size:16px}
+.paperfit{border:1px solid var(--line);border-radius:10px;padding:20px;overflow:hidden;background:#fff}
+.paperbox{width:720px;margin:0 auto}
+.doccard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer}
+.doccard:active{background:#FAF9FD}
+.doccard .dt{font-weight:700;font-size:15px;margin:8px 0 4px;line-height:1.4;word-break:keep-all}
+.doccard .dm{font-size:13px;color:var(--ink2)}
+.doccard .dn{font-size:12px;color:var(--ink3);margin-top:4px}
+@media(max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;width:78vw;max-width:300px;height:auto;z-index:60;transform:translateX(-105%);transition:transform .22s ease;padding-top:calc(20px + env(safe-area-inset-top));overflow-y:auto}
+  body.navopen .side{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.3)}
+  body.navopen .navdim{display:block;position:fixed;inset:0;background:rgba(15,12,30,.45);z-index:55}
+  .mtop{display:flex;position:sticky;top:0;z-index:40;align-items:center;gap:10px;background:#17142A;color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;font-weight:800}
+  .mtop .logo{padding:0;font-size:15px}
+  .mtop button{margin-left:auto;background:none;border:0;color:#fff;font-size:22px;line-height:1;padding:4px 6px;cursor:pointer}
+  .mtop .mham{margin-left:-4px;padding:4px 8px 4px 4px;font-size:24px}.mtop .mbell{margin-left:auto}
+  .mtab{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .mtab a,.mtab button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);text-decoration:none;background:none;border:0;padding:4px 0;position:relative;cursor:pointer;font-family:inherit}
+  .mtab .ic{font-size:20px;line-height:1.1}
+  .mtab a.on{color:var(--brand);font-weight:700}
+  .mtab .cnt{position:absolute;top:0;left:55%;background:#FF5C6C;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:0 5px}
+  .main{padding:16px 14px calc(84px + env(safe-area-inset-bottom))}
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .head{flex-wrap:wrap;gap:10px}
+  .head h1{font-size:22px}
+  .modal{width:100%!important;max-width:100%!important;max-height:calc(100vh - 20px);margin:10px}
+  .tabs{flex-wrap:wrap;overflow:visible;gap:6px;border-bottom:0;margin-bottom:14px}.tabs .tab{border:1px solid var(--line);border-radius:999px;padding:7px 13px;margin:0;background:#fff;font-size:13px}.tabs .tab.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .app{min-height:0}
+  .sm-only{display:revert}.doccards.sm-only{display:flex}.lg-only{display:none!important}
+  .aprwrap{grid-template-columns:minmax(0,1fr)}
+  .taxframe{height:calc(100dvh - 150px);margin-top:0}
+  .aprside{display:none;position:static;margin-bottom:12px;box-shadow:0 8px 24px rgba(20,16,40,.12)}
+  .aprside.open{display:flex}
+  .modal.docview{position:fixed;inset:0;width:100%!important;max-width:100%!important;max-height:100vh!important;height:100%;margin:0!important;border-radius:0;display:flex;flex-direction:column}
+  .modal.docview .mb{flex:1;overflow:auto}
+  .paperfit{padding:8px;border-radius:8px}
+  html,body{overflow-x:clip}
+  .main{overflow-x:clip}
+  .attnav{flex-direction:row;flex-wrap:wrap;gap:6px}
+  .attnav .label{display:none}
+  .attnav a{border:1px solid var(--line);font-size:13px;padding:6px 12px}
+  .attside{padding:14px}
+  .main b.num[style*="font-size:22px"]{font-size:16px!important}
+  .modal .t{font-size:13px}
+  .main .ddhead{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:14px}
+  .main .ddhead>*:last-child{grid-column:1/-1}
+  .main .tlhead span:nth-child(odd){visibility:hidden}
+  .main .tlhead{font-size:10px}
+  .main .tl{padding:12px 10px}
+  .main .attside{padding:14px}
+  .modal .mh{flex-wrap:wrap;gap:8px;padding:14px 16px}
+  .modal .mh>div:first-child{flex:1 1 100%}
+  .modal .mb{padding:14px}
+  .attwrap,.wlwrap,.ddbody,.attsum,.grid{grid-template-columns:minmax(0,1fr)!important}
+  .attwrap>*,.wlwrap>*,.grid>*,.ddbody>*{min-width:0}
+  .main .card{max-width:100%;overflow-x:auto}
+  .attside{position:static!important}
+}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{border-color:#CFCBDD}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.pri:hover{background:var(--brand-ink)}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2)}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:7px}
+.btn.lg{padding:12px 20px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:default}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;background:var(--line2);color:var(--ink2);white-space:nowrap}
+.tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)} .tag.info{background:var(--info-soft);color:var(--info)}
+.tag.brand{background:var(--brand-soft);color:var(--brand-ink)}
+.muted{color:var(--ink3)} .ink2{color:var(--ink2)}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:12px;color:var(--ink3);font-weight:600;margin-bottom:6px}
+.big{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.between{justify-content:space-between}
+.sp{flex:1}
+input.in,select.in,textarea.in{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:#fff;outline:none}
+input.in:focus,select.in:focus,textarea.in:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+textarea.in{min-height:120px;resize:vertical}
+.field{margin-bottom:14px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{padding:10px 14px;border:0;background:none;cursor:pointer;font-weight:600;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:var(--ink);border-bottom-color:var(--brand)}
+.tab .cnt{color:var(--brand);margin-left:4px}
+
+table.t{width:100%;border-collapse:collapse}
+.t th{font-size:12px;color:var(--ink3);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:#FBFAFD;white-space:nowrap;position:sticky;top:0}
+.t td{padding:11px 12px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.t tr.click{cursor:pointer} .t tr.click:hover td{background:#FAF9FD}
+.t td.r,.t th.r{text-align:right}
+.tablewrap{overflow:auto;max-height:70vh}
+.empty{padding:40px 20px;text-align:center;color:var(--ink3)}
+
+/* home */
+.clock{display:flex;flex-direction:column;gap:14px}
+.clock .now{font-size:34px;font-weight:800;letter-spacing:-.02em}
+.list li{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.list{margin:0;padding:0}
+.list li:last-child{border-bottom:0}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink3);flex:none}
+.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.off{background:#D9D6E3}
+.av{width:30px;height:30px;border-radius:50%;background:var(--brand-soft);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+
+/* works */
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.appc{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px 14px 18px;text-align:center;cursor:pointer;position:relative;transition:transform .12s,box-shadow .12s}
+.appc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(20,16,40,.08)}
+.apps.reorder .appc{cursor:grab}.apps.reorder .appc.drag{opacity:.4}.apps.reorder .appc.over{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.appc .ico{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;margin:0 auto 12px;font-size:26px}
+.appc .nm{font-weight:600}
+.appc .lock{position:absolute;top:10px;right:12px;font-size:12px}
+.appc.add{border-style:dashed;color:var(--ink3);display:grid;place-items:center}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:16px}
+.charts .card{padding:16px 18px;height:300px}
+.fieldrow{display:grid;grid-template-columns:1fr 120px 1.3fr 44px 64px 34px;gap:8px;margin-bottom:8px;align-items:center}
+.recsec{font-weight:800;font-size:14px;margin:18px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.recsec:first-child{margin-top:0}
+.stsel{padding:4px 8px!important;font-size:12px;font-weight:600;width:auto;min-width:92px;border-radius:7px}
+.wt th,.wt td{white-space:nowrap}.wt td{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.stsel.tone-ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}.stsel.tone-warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}.stsel.tone-info{background:var(--info-soft);color:var(--info);border-color:transparent}.stsel.tone-{background:var(--line2);border-color:transparent}.stsel.tone-bad{background:var(--bad-soft,#FDECEC);color:var(--bad);border-color:transparent}
+.calcbox{min-height:40px;display:flex;align-items:center;justify-content:flex-end;font-weight:700}
+.chartrow{display:grid;grid-template-columns:1fr 90px 1fr 1fr 34px;gap:8px;margin-bottom:8px;align-items:center}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.cal div{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:92px;padding:6px 8px;font-size:12px;background:#fff}
+.cal .dh{min-height:auto;background:#FBFAFD;color:var(--ink3);font-weight:600;text-align:center}
+.cal .dim{background:#FBFAFD;color:#C9C6D4}
+.cal .today{box-shadow:inset 0 0 0 2px var(--brand)}
+.cal .ev{display:block;margin-top:3px;padding:1px 6px;border-radius:5px;background:var(--brand-soft);color:var(--brand-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal .ev.p{background:var(--warn-soft);color:var(--warn)}
+
+/* approval line */
+.aline{display:flex;gap:0;flex-wrap:wrap;margin:6px 0 4px}
+.astep{border:1px solid var(--line);margin-right:-1px;min-width:110px;text-align:center}
+.astep .h{background:#FBFAFD;font-size:12px;color:var(--ink3);padding:4px;border-bottom:1px solid var(--line)}
+.astep .b{padding:10px 8px;font-weight:600}
+.astep .s{font-size:11px;padding:0 0 8px}
+.chain{display:flex;flex-direction:column;gap:6px}
+.chain .it{display:flex;align-items:center;gap:8px;background:#FBFAFD;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+
+/* modal + toast */
+.ov{position:fixed;inset:0;background:rgba(20,16,40,.42);display:grid;place-items:center;z-index:50;padding:20px}
+.modal{background:#fff;border-radius:16px;width:min(680px,100%);max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(20,16,40,.25)}
+.modal.wide{width:min(920px,100%)}
+.modal .mh{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:1}
+.modal .mh h3{margin:0;font-size:17px}
+.modal .mb{padding:20px 22px}
+.modal .mf{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1D1B26;color:#fff;padding:11px 18px;border-radius:10px;z-index:80;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.err{background:var(--bad)}
+
+/* auth */
+.auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1200px 500px at 20% -10%,#E9E2FF 0,transparent 60%),var(--bg)}
+.auth .box{width:min(400px,100%);padding:32px}
+.auth h2{margin:0 0 4px;font-size:22px}
+.docbody{white-space:pre-wrap;background:#FBFAFD;border:1px solid var(--line2);border-radius:10px;padding:14px 16px;min-height:80px}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;margin-bottom:14px}
+.kv dt{color:var(--ink3);font-size:13px} .kv dd{margin:0;font-weight:500}
+.spinner{width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp 0.8s linear infinite;margin:60px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.attwrap{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:start}
+@media(max-width:1000px){.attwrap{grid-template-columns:1fr}}
+.attside{padding:18px;position:sticky;top:20px}
+.attio{display:flex;align-items:center;justify-content:space-around;background:#F6F5FA;border-radius:10px;padding:12px;text-align:center}
+.statuspick{margin-top:8px;border-color:#9ADBB9!important;color:var(--ok);font-weight:600;text-align:center}
+.attnav{margin-top:18px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:2px}
+.attnav a{padding:7px 10px;border-radius:8px;text-decoration:none;color:var(--ink2);font-size:14px}
+.attnav a.on{color:var(--brand-ink);background:var(--brand-soft);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:7px 16px;cursor:pointer;font-weight:600;color:var(--ink3)}
+.seg button.on{background:var(--ink);color:#fff}
+.attsum{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;padding:20px 24px;margin-bottom:14px}
+.attsum>div{padding:0 20px}.attsum>div+div{border-left:1px solid var(--line)}
+.attsum .sumleft{padding-left:0}
+.sumstat{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}
+.sumstat .muted{font-size:13px;margin-bottom:6px}
+@media(max-width:1100px){.attsum{grid-template-columns:1fr}.attsum>div+div{border-left:0;border-top:1px solid var(--line);padding:14px 0 0;margin-top:14px}.attsum>div{padding:0}}
+.pbar{position:relative;height:8px;background:#EEECF4;border-radius:5px;margin-top:16px}
+.pbar>div{height:100%;border-radius:5px}
+.pbar i{position:absolute;top:-4px;bottom:-4px;width:2px;background:#9592A3}
+.weekstrip{display:grid;grid-template-columns:repeat(7,1fr);padding:10px;gap:6px;margin-bottom:14px}
+.wday{border:1px solid transparent;background:none;border-radius:10px;min-height:110px;text-align:left;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.wday:hover{background:#FAF9FD}.wday.on{border-color:var(--ok);background:#F3FBF7}
+.wdh{font-weight:600;font-size:13px}.todaydot{background:var(--ink);color:#fff;border-radius:10px;padding:0 6px}
+.wtime{font-size:12px;font-weight:600}
+.daydetail{padding:0;overflow:hidden}
+.ddhead{display:flex;align-items:center;gap:24px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ddhead .muted{font-size:12px}.ddhead b{font-size:14px}
+.ddbody{display:grid;grid-template-columns:1fr 260px;background:#FBFAFD;min-height:260px}
+@media(max-width:1000px){.ddbody{grid-template-columns:1fr}}
+.tl{padding:16px 18px}
+.tlhead{display:grid;grid-template-columns:repeat(24,1fr);font-size:12px;color:var(--ink2);text-align:left}
+.tlhead .dim{color:#C2BFCE}
+.tlgrid{position:relative;height:200px;margin-top:8px}
+.tlgrid i{position:absolute;top:0;bottom:0;border-left:1px dashed #DCD9E6}
+.tlwork{position:absolute;top:0;bottom:0;background:#EFEBFB;opacity:.7}
+.tlbar{position:absolute;top:70px;height:44px;background:var(--ok);border-radius:8px;color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;padding:0 8px;white-space:nowrap;overflow:visible}
+.tlbar.open{background:linear-gradient(90deg,var(--ok),#5BC79A)}
+.tlleave{position:absolute;top:130px;left:0;right:0;height:30px;background:var(--brand-soft);color:var(--brand-ink);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.tlnow{position:absolute;top:-6px;bottom:0;width:2px;background:var(--bad)}
+.evpanel{border-left:1px solid var(--line);padding:16px 18px;background:#fff}
+.evlist{list-style:none;margin:12px 0 0;padding:0}.evlist li{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line2);font-size:13px}
+.legend{padding:10px 20px;font-size:12px;color:var(--ink3);border-top:1px solid var(--line);flex-wrap:wrap}
+.lgdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 4px 0 10px;vertical-align:middle}
+.attcal div{min-height:96px}
+.allatt td{text-align:center;vertical-align:top;min-width:96px}.allatt td:first-child{text-align:left}
+.allatt .offday{background:#FBFAFD}.allatt .todaycol{background:#F3FBF7}
+
+.seal-mini{display:inline-grid;place-items:center;width:34px;height:34px;border:2px solid #E5262D;border-radius:50%;color:#E5262D;font-weight:800;font-size:11px;flex:none}
+</style>
+</head>
+<body>
+<div id="root"><div class="spinner"></div></div>
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+/* SOULLIVE Office — 로그인 화면만 공개. 승인된 직원이 로그인해야 업무 화면 코드를 내려받아요. */
+(() => {
+  const URL_ = 'https://iaorjonuhayrosewcugi.supabase.co', KEY = 'sb_publishable_lP9lRTCypxtLQv8-xPap3A_HEoUy-is';
+  const sb = supabase.createClient(URL_, KEY);
+  const $ = s => document.querySelector(s), esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const toast = (m, err) => { const t = $('#toast'); t.innerHTML = `<div class="toast ${err ? 'err' : ''}">${esc(m)}</div>`; clearTimeout(toast._t); toast._t = setTimeout(() => t.innerHTML = '', err ? 4500 : 2500); };
+  const redirectUrl = () => location.protocol.startsWith('http') ? location.origin + location.pathname : undefined;
+  const busy = async fn => { try { await fn(); } catch (e) { console.error(e); toast((e && e.message || String(e)).replace(/^.*?ERROR:\s*/, ''), true); } };
+  const must = ({ data, error }) => { if (error) throw error; return data; };
+  const box = inner => { $('#root').innerHTML = `<div class="auth"><div class="card box"><img class="authlogo" src="icons/logo.png" alt="SOULLIVE">${inner}</div></div>`; };
+  const F = {
+    login: `<h2>로그인</h2><p class="muted" style="margin:0 0 22px">SOULLIVE 사내 업무 시스템</p>
+      <form onsubmit="__A.login(event)"><div class="field"><div class="label">이메일</div><input class="in" name="email" type="email" required autocomplete="email"></div>
+      <div class="field"><div class="label">비밀번호</div><input class="in" name="pw" type="password" required autocomplete="current-password"></div>
+      <button class="btn pri lg" style="width:100%;justify-content:center">로그인</button></form>
+      <div class="row between" style="margin-top:16px;font-size:13px"><a href="#" onclick="__A.show('signup');return false">처음이신가요? 가입하기</a><a href="#" onclick="__A.show('reset');return false" class="muted">비밀번호 찾기</a></div>`,
+    signup: `<h2>가입하기</h2><p class="muted" style="margin:0 0 22px">회사 메일(@soullive.me)로 가입하고, 관리자가 승인하면 사용할 수 있어요.</p>
+      <form onsubmit="__A.signup(event)"><div class="field"><div class="label">이름</div><input class="in" name="name" required maxlength="30"></div>
+      <div class="field"><div class="label">회사 이메일</div><input class="in" name="email" type="email" required></div>
+      <div class="field"><div class="label">비밀번호 (8자 이상)</div><input class="in" name="pw" type="password" minlength="8" required autocomplete="new-password"></div>
+      <button class="btn pri lg" style="width:100%;justify-content:center">가입하기</button></form>
+      <p style="margin-top:16px;font-size:13px"><a href="#" onclick="__A.show('login');return false">이미 계정이 있어요</a></p>`,
+    reset: `<h2>비밀번호 찾기</h2><p class="muted" style="margin:0 0 22px">가입한 이메일로 재설정 링크를 보내드려요.</p>
+      <form onsubmit="__A.reset(event)"><div class="field"><div class="label">이메일</div><input class="in" name="email" type="email" required></div>
+      <button class="btn pri lg" style="width:100%;justify-content:center">링크 보내기</button></form>
+      <p style="margin-top:16px;font-size:13px"><a href="#" onclick="__A.show('login');return false">로그인으로 돌아가기</a></p>`,
+    newpw: `<h2>새 비밀번호 설정</h2><form onsubmit="__A.newpw(event)" style="margin-top:18px"><div class="field"><div class="label">새 비밀번호 (8자 이상)</div><input class="in" name="pw" type="password" minlength="8" required></div>
+      <button class="btn pri lg" style="width:100%;justify-content:center">저장</button></form>`,
+    sent: `<h2>메일을 확인해 주세요</h2><p class="ink2">보내드린 메일의 링크를 누른 뒤 다시 로그인하세요.</p><button class="btn" onclick="__A.show('login')">로그인으로</button>`
+  };
+  let recovering = /type=recovery/.test(location.hash), started = false;
+  async function loadApp() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return box(F.login);
+    if (recovering) return box(F.newpw);
+    const me = (await sb.from('profiles').select('name,approved,resigned_at').eq('id', session.user.id).maybeSingle()).data;
+    if (!me) return box(F.login);
+    if (!me.approved || me.resigned_at) return box(me.resigned_at ? `<h2>사용이 중지된 계정이에요</h2><p class="ink2">${esc(me.name)}님 계정은 퇴사 처리되어 로그인할 수 없어요.</p><button class="btn ghost" onclick="__A.out()">로그아웃</button>`
+      : `<h2>승인 대기 중</h2><p class="ink2">${esc(me.name)}님, 가입이 완료됐어요.<br>관리자가 승인하면 바로 사용할 수 있습니다.</p><div class="row"><button class="btn" onclick="__A.go()">새로고침</button><button class="btn ghost" onclick="__A.out()">로그아웃</button></div>`);
+    if (started) return; started = true;
+    $('#root').innerHTML = '<div class="spinner"></div>';
+    const code = await __loadBundle(sb, 'index', '1ed0a50b2fb8');
+    const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s);
+  }
+  async function __loadBundle(sb, name, ver) {
+    try { const c = JSON.parse(localStorage.getItem('so_b_' + name) || 'null'); if (c && c.ver === ver) return c.code; } catch { }
+    const k = await sb.rpc('app_key', { p_name: name }); if (k.error || !k.data) throw new Error('볼 수 있는 권한이 없어요');
+    const raw = Uint8Array.from(atob(k.data), c => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+    const buf = new Uint8Array(await (await fetch(`app_${name}.bin?v=${ver}`, { cache: 'no-cache' })).arrayBuffer());
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    const code = await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    try { localStorage.setItem('so_b_' + name, JSON.stringify({ ver, code })); } catch { }
+    return code;
+  }
+  window.__A = {
+    show: m => box(F[m]),
+    go: () => busy(loadApp),
+    out: async () => { try { Object.keys(localStorage).filter(k => k.startsWith('so_b_')).forEach(k => localStorage.removeItem(k)); } catch { } await sb.auth.signOut(); box(F.login); },
+    login: e => { e.preventDefault(); const f = e.target; busy(async () => { must(await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.pw.value })); await loadApp(); }); },
+    signup: e => { e.preventDefault(); const f = e.target; busy(async () => {
+      const em = f.email.value.trim();
+      if (!/@soullive\.me$/i.test(em) && !confirm('회사 메일(@soullive.me)로만 가입할 수 있어요. 관리자가 예외로 등록한 메일이면 확인을 눌러 계속하세요.')) return;
+      const res = await sb.auth.signUp({ email: em, password: f.pw.value, options: { data: { name: f.name.value.trim() }, emailRedirectTo: redirectUrl() } });
+      if (res.error && /Database error/i.test(res.error.message)) throw new Error('회사 메일(@soullive.me)로만 가입할 수 있어요. 다른 메일은 관리자에게 등록을 요청하세요.');
+      const r = must(res); if (r.session) await loadApp(); else box(F.sent); }); },
+    reset: e => { e.preventDefault(); busy(async () => { must(await sb.auth.resetPasswordForEmail(e.target.email.value.trim(), { redirectTo: redirectUrl() })); box(F.sent); }); },
+    newpw: e => { e.preventDefault(); busy(async () => { must(await sb.auth.updateUser({ password: e.target.pw.value })); recovering = false; history.replaceState(null, '', location.pathname); toast('비밀번호를 변경했어요'); await loadApp(); }); }
+  };
+  sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') { recovering = true; box(F.newpw); } });
+  busy(loadApp);
+})();
+
+</script>
+</body>
+</html>
