@@ -107,6 +107,7 @@ a{color:var(--brand)}
   .aprside.open{display:flex}
   .modal.docview{position:fixed;inset:0;width:100%!important;max-width:100%!important;max-height:100vh!important;height:100%;margin:0!important;border-radius:0;display:flex;flex-direction:column}
   .modal.docview .mb{flex:1;overflow:auto}
+  .modal.docview .mh{gap:8px;align-items:flex-start;flex-wrap:wrap}.modal.docview .mh>.row{flex-wrap:wrap;flex-basis:100%;justify-content:flex-end}.modal.docview .mh>.row .btn.ghost{display:none}
   .paperfit{padding:8px;border-radius:8px}
   html,body{overflow-x:clip}
   .main{overflow-x:clip}
@@ -222,7 +223,7 @@ table.t{width:100%;border-collapse:collapse}
 .modal .mh{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:1}
 .modal .mh h3{margin:0;font-size:17px}
 .modal .mb{padding:20px 22px}
-.modal .mf{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}.modal .mf{flex-wrap:wrap;align-items:center}.modal .mf .btn{white-space:nowrap}@media(max-width:760px){.modal .mf{padding:10px 14px}.modal .mf>.muted{flex-basis:100%;font-size:11px!important}.modal .mf .btn{padding:9px 12px}}
+.modal .mf{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--line);position:sticky;bottom:0;background:#fff}.mback{display:none;font-size:20px;padding:4px 10px;margin:-2px 4px 0 -8px}@media(max-width:760px){.mback{display:inline-flex}}.modal .mf{flex-wrap:wrap;align-items:center}.modal .mf .btn{white-space:nowrap}@media(max-width:760px){.modal .mf{padding:10px 14px}.modal .mf>.muted{flex-basis:100%;font-size:11px!important}.modal .mf .btn{padding:9px 12px}}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1D1B26;color:#fff;padding:11px 18px;border-radius:10px;z-index:80;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.err{background:var(--bad)}
 
@@ -334,7 +335,7 @@ table.t{width:100%;border-collapse:collapse}
       : `<h2>승인 대기 중</h2><p class="ink2">${esc(me.name)}님, 가입이 완료됐어요.<br>관리자가 승인하면 바로 사용할 수 있습니다.</p><div class="row"><button class="btn" onclick="__A.go()">새로고침</button><button class="btn ghost" onclick="__A.out()">로그아웃</button></div>`);
     if (started) return; started = true;
     $('#root').innerHTML = '<div class="spinner"></div>';
-    const code = await __loadBundle(sb, 'index', 'a52755676999');
+    const code = await __loadBundle(sb, 'index', '256494e20417');
     const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s);
   }
   async function __loadBundle(sb, name, ver) {
