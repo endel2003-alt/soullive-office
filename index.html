@@ -57,6 +57,19 @@ a{color:var(--brand)}
 .pad{padding:20px}
 .grid{display:grid;gap:16px}
 .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+.mcards td.mc-hide{display:none}
+@media(max-width:760px){
+  .mcards,.mcards tbody{display:block;width:100%!important;min-width:0!important}.mcards thead{display:none}
+  .mcards tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:#fff}
+  .mcards tr.totrow{display:flex;justify-content:space-between;gap:10px;background:#FAF9FD}
+  .mcards td{display:block;padding:0!important;border:0!important;max-width:none!important;white-space:normal!important;overflow:visible!important;text-align:left!important;min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .mcards td::before{content:attr(data-label);display:block;font-size:11px;color:var(--muted);font-weight:500;margin-bottom:2px}
+  .mcards td[data-label=""]::before,.mcards tr.totrow td::before{display:none}
+  .mcards td:empty{display:none}
+  .mcards td .in,.mcards td select{width:100%}
+  .tablewrap:has(.mcards),.card:has(>.mcards){max-height:none!important;overflow:visible!important;border:0;background:transparent}
+  .mcards.mc3 tr{grid-template-columns:1fr 1fr 1fr}
+}
 .app>*,.grid>*,.g2>*,.g3>*,.g4>*,.attwrap>*,.wlwrap>*,.ddbody>*,.attsum>*{min-width:0}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:1fr 1fr}}
 .mtop,.mtab,.navdim,.sm-only{display:none}
@@ -335,7 +348,7 @@ table.t{width:100%;border-collapse:collapse}
       : `<h2>승인 대기 중</h2><p class="ink2">${esc(me.name)}님, 가입이 완료됐어요.<br>관리자가 승인하면 바로 사용할 수 있습니다.</p><div class="row"><button class="btn" onclick="__A.go()">새로고침</button><button class="btn ghost" onclick="__A.out()">로그아웃</button></div>`);
     if (started) return; started = true;
     $('#root').innerHTML = '<div class="spinner"></div>';
-    const code = await __loadBundle(sb, 'index', 'ba1424b0edec');
+    const code = await __loadBundle(sb, 'index', '6ee63eabaaba');
     const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s);
   }
   async function __loadBundle(sb, name, ver) {

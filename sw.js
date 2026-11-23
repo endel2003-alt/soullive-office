@@ -1,5 +1,5 @@
 // SOULLIVE Office service worker — 앱 설치용. 화면은 항상 최신 버전을 먼저 받고, 오프라인일 때만 마지막 화면을 보여줌.
-const CACHE = 'soullive-shell-v98';
+const CACHE = 'soullive-shell-v99';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', './index.html']).catch(() => {}))); });
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
