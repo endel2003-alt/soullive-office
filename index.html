@@ -69,6 +69,10 @@ a{color:var(--brand)}
   .mcards td .in,.mcards td select{width:100%}
   .tablewrap:has(.mcards),.card:has(>.mcards){max-height:none!important;overflow:visible!important;border:0;background:transparent}
   .mcards.mc3 tr{grid-template-columns:1fr 1fr 1fr}
+  .mcards td[data-label=""]{grid-column:1/-1}
+  .mcards td .row{flex-wrap:wrap!important}
+  .mcards td[data-label=""] .row>.btn{flex:1 1 auto;justify-content:center}
+  .mcards td.num{overflow-wrap:normal}
 }
 .app>*,.grid>*,.g2>*,.g3>*,.g4>*,.attwrap>*,.wlwrap>*,.ddbody>*,.attsum>*{min-width:0}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:1fr 1fr}}
