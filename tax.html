@@ -153,7 +153,7 @@ tr.off td{color:var(--ink-3)}
   const fail = m => { document.body.insertAdjacentHTML('beforeend', `<div style="padding:40px;text-align:center;color:#666;font-family:sans-serif">${m}</div>`); };
   try {
     const { data: { session } } = await sb.auth.getSession(); if (!session) return fail('Office에 로그인한 뒤 열어 주세요.');
-    const code = await __loadBundle(sb, 'tax', 'b18acec18aae');
+    const code = await __loadBundle(sb, 'tax', 'cfdbf31951f6');
     const s = document.createElement('script'); s.textContent = code; document.body.appendChild(s);
   } catch (e) { console.error(e); fail('화면을 불러오지 못했어요. 새로고침해 주세요.'); }
 })();
